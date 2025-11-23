@@ -8,7 +8,7 @@ import aiogram
 import dotenv
 from aiogram import Bot, F
 from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
+from aiogram.enums import ChatType, ParseMode
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -35,21 +35,24 @@ COMMENT_THREAD_ID = int(os.environ["COMMENT_THREAD"])
 DELETE_DELAY = float(os.environ["DELETE_DELAY"])
 RULES_THREAD = int(os.environ["RULES_THREAD"])
 GUIDE_THREAD = int(os.environ["GUIDE_THREAD"])
-ANKET_THREAD = int(os.environ["ANKET_THREAD"])
+SURVEY_THREAD = int(os.environ["SURVEY_THREAD"])
 
-add_bday_success_id = "add_bday_success"
-add_bday_fail_id = "add_bday_fail"
 show_bdays_cmd = "show_bdays"
 welcome_pic_command = "welcome_pic"
 
+add_bday_success_id = "add_bday_success"
+add_bday_fail_id = "add_bday_fail"
+
 image_thread_reply = "Эта тема для картинок, {user_tag}, мы перенаправили твой комментарий в другую {message_link}"
 comment_thread_author_reply = "Comment to your post forwarded here, {}"
+
+add_bday_inline_title = "Add birthday"
+add_bday_pending_msg = "Adding birthday..."
+add_bday_fail_msg = "Date format is invalid. Try something like 25-07"
 add_bday_error_msg = "Some error happened, try again later or contact maintainer."
 add_bday_success_msg = "Birthday added!"
 add_bday_button_txt = "Add your burthday too!"
-add_bday_fail_msg = "Date format is invalid. Try something like 25-07"
-add_bday_pending_msg = "Adding birthday..."
-add_bday_inline_title = "Add_birthday"
+
 welcome_message = """❤ {}, Добро пожаловать! ❤
 Мы очень рады видеть тебя в нашем сообществе.
 Давай знакомиться! Пожалуйста, прочти правила, ознакомься с темами и заполни анкету."""  # noqa: RUF001
@@ -236,7 +239,7 @@ async def welcome_post(message: Message) -> None:
                     ),
                     InlineKeyboardButton(
                         text=survey_button_caption,
-                        url=f"{chat_link}/{ANKET_THREAD}",
+                        url=f"{chat_link}/{SURVEY_THREAD}",
                     ),
                 ],
             ],
@@ -244,7 +247,7 @@ async def welcome_post(message: Message) -> None:
     )
 
 
-@dp.message(Command(welcome_pic_command))
+@dp.message(Command(welcome_pic_command), F.chat.type == ChatType.PRIVATE)
 async def start_welcome_pic_query(message: Message, state: FSMContext) -> None:
     """Request picture for welcome message from the user."""
     # We're not in a channel, nothing to worry about here.
