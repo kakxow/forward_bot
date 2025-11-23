@@ -164,13 +164,6 @@ async def add_bday(res: ChosenInlineResult) -> None:
 @dp.inline_query()
 async def bday(inline_query: InlineQuery) -> None:
     """Respond to inline queries for adding bdays."""
-    msg_fail = InputTextMessageContent(message_text=add_bday_fail_msg)
-    response_fail = InlineQueryResultArticle(
-        id=add_bday_fail_id,
-        title=add_bday_inline_title,
-        input_message_content=msg_fail,
-    )
-
     msg_success = InputTextMessageContent(message_text=add_bday_pending_msg)
     response_success = InlineQueryResultArticle(
         id=add_bday_success_id,
@@ -180,36 +173,10 @@ async def bday(inline_query: InlineQuery) -> None:
     )
 
     query = inline_query.query.strip()
-    response = response_fail if not is_valid(query) else response_success
-
-    await inline_query.answer([response])
-
-
-# @dp.message(Command(add_birthday_cmd))
-# async def bday(message: Message):
-#     if not message.entities:
-#         raise RuntimeError
-#     command = message.entities[0]
-#     if not message.text:
-#         raise RuntimeError
-#     birthday = message.text[command.offset + command.length :].strip()
-
-#     if not is_valid(birthday):
-#         await message.reply(
-#             "Bad format - date should be day-month (/add_birthday 25-07 for example)"
-#         )
-#         return
-
-#     try:
-#         await add_birthday(message, birthday)
-
-#     except Exception:
-#         await message.reply(
-#             "Some error happened, try again later or contact maintainer."
-#         )
-#         raise
-#     else:
-#         await message.reply("Birthday added!")
+    if is_valid(query):
+        await inline_query.answer([response_success], cache_time=0)
+    else:
+        await inline_query.answer([], cache_time=0)
 
 
 @dp.message(F.new_chat_members)
