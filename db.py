@@ -33,7 +33,7 @@ class WelcomePicture(Base):
     id = Column(String, primary_key=True)
 
 
-engine = create_async_engine("sqlite+aiosqlite:///forward.sqlite", pool_size=1)
+engine = create_async_engine("sqlite+aiosqlite:///forward.sqlite")
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 

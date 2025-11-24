@@ -123,8 +123,8 @@ async def forward(comment: Message) -> None:
     comment_user_link = user_link(comment_user)
     msg_link = message_link(forwarded_comment.message_id, "тему")
     answer = await comment.answer(image_thread_reply.format(user_tag=comment_user_link, message_link=msg_link))
-
-    tasks.append(asyncio.Task(del_msg(answer)))
+    f = asyncio.Task(del_msg(answer))
+    tasks.append(f)
 
 
 @dp.message(Command(show_bdays_cmd))
@@ -181,8 +181,9 @@ async def bday(inline_query: InlineQuery) -> None:
 async def welcome_post(message: Message) -> None:
     """Make a welcome post on member joined."""
     pic = await load_pic()
-    # If no pic - send welcome message anyway.
-    user = cast("User", message.from_user)
+    new_chat_members = cast("list[User]", message.new_chat_members)
+    user = new_chat_members[0]
+
     welcome_msg = welcome_message.format(user_link(user))
     chat_id = abs(CHAT_ID) % 10**12
     chat_link = f"https://t.me/c/{chat_id}"
@@ -204,6 +205,7 @@ async def welcome_post(message: Message) -> None:
             ],
         ],
     )
+    # If no pic - send welcome message anyway.
     if not pic:
         await message.answer(text=welcome_msg)
     else:
