@@ -50,7 +50,7 @@ add_bday_inline_title = "Add birthday"
 add_bday_pending_msg = "Adding birthday..."
 add_bday_fail_msg = "Date format is invalid. Try something like 25-07"
 add_bday_error_msg = "Some error happened, try again later or contact maintainer."
-add_bday_success_msg = "Birthday added!"
+add_bday_success_msg = "Birthday added - {}"
 add_bday_button_txt = "Add your burthday too!"
 
 welcome_message = """❤ {}, Добро пожаловать! ❤
@@ -147,7 +147,6 @@ async def add_bday(res: ChosenInlineResult) -> None:
     try:
         await add_birthday(res.from_user, CHAT_ID, res.query.strip())
     except Exception:
-        # No button here because something's not working anyway.
         await bot.edit_message_text(
             text=add_bday_error_msg,
             inline_message_id=res.inline_message_id,
@@ -155,9 +154,8 @@ async def add_bday(res: ChosenInlineResult) -> None:
         raise
     else:
         await bot.edit_message_text(
-            text=add_bday_success_msg,
+            text=add_bday_success_msg.format(res.query.strip()),
             inline_message_id=res.inline_message_id,
-            reply_markup=add_bday_inline_markup,
         )
 
 
@@ -270,5 +268,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(main())
