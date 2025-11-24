@@ -33,7 +33,7 @@ class WelcomePicture(Base):
     id = Column(String, primary_key=True)
 
 
-engine = create_async_engine("sqlite+aiosqlite:///forward.sqlite")
+engine = create_async_engine("sqlite+aiosqlite:///forward.sqlite", pool_size=1)
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 
@@ -99,11 +99,9 @@ async def save_pic(pic: str) -> None:
         await session.commit()
 
 
-async def load_pic() -> str:
+async def load_pic() -> str | None:
     """Load a welcome picture id from db."""
     async with async_session() as session, session.begin():
         pic = await session.scalar(select(WelcomePicture.id).limit(1))
         await session.commit()
-        if not pic:
-            raise RuntimeError
         return pic

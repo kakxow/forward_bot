@@ -184,32 +184,30 @@ async def welcome_post(message: Message) -> None:
     # If no pic - send welcome message anyway.
     user = cast("User", message.from_user)
     welcome_msg = welcome_message.format(user_link(user))
-    if not pic:
-        await message.answer(text=welcome_msg)
     chat_id = abs(CHAT_ID) % 10**12
     chat_link = f"https://t.me/c/{chat_id}"
-    await message.answer_photo(
-        photo=pic,
-        caption=welcome_msg,
-        reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text=rules_button_caption,
-                        url=f"{chat_link}/{RULES_THREAD}",
-                    ),
-                    InlineKeyboardButton(
-                        text=guide_button_caption,
-                        url=f"{chat_link}/{GUIDE_THREAD}",
-                    ),
-                    InlineKeyboardButton(
-                        text=survey_button_caption,
-                        url=f"{chat_link}/{SURVEY_THREAD}",
-                    ),
-                ],
+    welcome_kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=rules_button_caption,
+                    url=f"{chat_link}/{RULES_THREAD}",
+                ),
+                InlineKeyboardButton(
+                    text=guide_button_caption,
+                    url=f"{chat_link}/{GUIDE_THREAD}",
+                ),
+                InlineKeyboardButton(
+                    text=survey_button_caption,
+                    url=f"{chat_link}/{SURVEY_THREAD}",
+                ),
             ],
-        ),
+        ],
     )
+    if not pic:
+        await message.answer(text=welcome_msg)
+    else:
+        await message.answer_photo(photo=pic, caption=welcome_msg, reply_markup=welcome_kb)
 
 
 @dp.message(Command(welcome_pic_command), F.chat.type == ChatType.PRIVATE)
