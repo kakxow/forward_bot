@@ -30,12 +30,16 @@ from db import create_tables, load_pic, save_pic
 dotenv.load_dotenv()
 
 CHAT_ID = int(os.environ["CHAT_ID"])
-IMAGE_THREAD_ID = int(os.environ["IMAGE_THREAD"])
+_raw_ids = os.environ["IMAGE_THREADS"]
+IMAGE_THREAD_IDS = [int(x) for x in _raw_ids.split(",")]
 COMMENT_THREAD_ID = int(os.environ["COMMENT_THREAD"])
 DELETE_DELAY = float(os.environ["DELETE_DELAY"])
 RULES_THREAD = int(os.environ["RULES_THREAD"])
 GUIDE_THREAD = int(os.environ["GUIDE_THREAD"])
 SURVEY_THREAD = int(os.environ["SURVEY_THREAD"])
+
+allowed_entities = ("url", "text_link")
+allowed_content = F.user.is_bot | F.photo | F.video | F.audio | F.document | F.animation
 
 show_bdays_cmd = "show_bdays"
 welcome_pic_command = "welcome_pic"
@@ -102,12 +106,15 @@ def message_link(message_id: int, text: str, chat_id: int = CHAT_ID) -> str:
     return f'<a href="https://t.me/c/{message_link}">{text}</a>'
 
 
-@dp.message((F.chat.id == CHAT_ID) & (F.message_thread_id == IMAGE_THREAD_ID) & (~F.photo))
+@dp.message((F.chat.id == CHAT_ID) & (F.message_thread_id.in_(IMAGE_THREAD_IDS)) & ~allowed_content)
 async def forward(comment: Message) -> None:
     """Forward messages from image thread to comment thread."""
+    entities = comment.entities
+    if entities and any((e.type in allowed_entities) for e in entities):
+        return
     original_message = comment.reply_to_message
     # If message is a reply to somethign - forward original message too and mention author.
-    if original_message and original_message.message_id != IMAGE_THREAD_ID:
+    if original_message and original_message.message_id not in IMAGE_THREAD_IDS:
         forwarded_original = await original_message.forward(comment.chat.id, COMMENT_THREAD_ID)
         # We're not in a channel, so we'll always have a User here.
         original_user = cast("User", original_message.from_user)
