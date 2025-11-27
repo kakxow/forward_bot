@@ -34,9 +34,9 @@ _raw_ids = os.environ["IMAGE_THREADS"]
 IMAGE_THREAD_IDS = [int(x) for x in _raw_ids.split(",")]
 COMMENT_THREAD_ID = int(os.environ["COMMENT_THREAD"])
 DELETE_DELAY = float(os.environ["DELETE_DELAY"])
-RULES_THREAD = int(os.environ["RULES_THREAD"])
-GUIDE_THREAD = int(os.environ["GUIDE_THREAD"])
-SURVEY_THREAD = int(os.environ["SURVEY_THREAD"])
+RULES_THREAD = os.environ["RULES_THREAD"]
+GUIDE_THREAD = os.environ["GUIDE_THREAD"]
+SURVEY_THREAD = os.environ["SURVEY_THREAD"]
 
 allowed_entities = ("url", "text_link")
 allowed_content = F.user.is_bot | F.photo | F.video | F.audio | F.document | F.animation
