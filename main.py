@@ -47,7 +47,8 @@ welcome_pic_command = "welcome_pic"
 add_bday_success_id = "add_bday_success"
 add_bday_fail_id = "add_bday_fail"
 
-image_thread_reply = "Эта тема для картинок, {user_tag}, мы перенаправили твой комментарий в другую {message_link}"
+image_thread_reply = "{user_tag}, Ваш комментарий перенаправлен в {message_link}"
+comment_thread_name = "Обсуждения"
 comment_thread_author_reply = "Comment to your post forwarded here, {}"
 
 add_bday_inline_title = "Add birthday"
@@ -128,7 +129,7 @@ async def forward(comment: Message) -> None:
     comment_user = cast("User", comment.from_user)
 
     comment_user_link = user_link(comment_user)
-    msg_link = message_link(forwarded_comment.message_id, "тему")
+    msg_link = message_link(forwarded_comment.message_id, comment_thread_name)
     answer = await comment.answer(image_thread_reply.format(user_tag=comment_user_link, message_link=msg_link))
     f = asyncio.Task(del_msg(answer))
     tasks.append(f)
