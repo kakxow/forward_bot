@@ -215,7 +215,7 @@ async def welcome_post(message: Message) -> None:
     )
     # If no pic - send welcome message anyway.
     if not pic:
-        await message.answer(text=welcome_msg)
+        await message.answer(text=welcome_msg, reply_markup=welcome_kb)
     else:
         await message.answer_photo(photo=pic, caption=welcome_msg, reply_markup=welcome_kb)
 
