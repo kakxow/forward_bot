@@ -137,7 +137,8 @@ async def forward(comment: Message) -> None:
         # We're not in a channel, so we'll always have a User here.
         original_user = cast("User", original_message.from_user)
         original_user_link = user_link(original_user)
-        await aiogram.methods.send_message.SendMessage(
+        bot = cast("aiogram.Bot", comment.bot)
+        await bot.send_message(
             chat_id=comment.chat.id,
             text=comment_thread_author_reply.format(original_user_link),
             reply_to_message_id=forwarded_original_id,
