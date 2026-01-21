@@ -123,26 +123,34 @@ async def forward(comment: Message) -> None:
     original_message = comment.reply_to_message
     # If message is a reply to somethign - forward original message too and mention author.
     if original_message and original_message.message_id not in IMAGE_THREAD_IDS:
+        forwarded_original_id = None
         try:
             forwarded_original = await original_message.forward(
                 comment.chat.id,
                 COMMENT_THREAD_ID,
             )
         except TelegramBadRequest:
-            forwarded_original = await original_message.copy_to(
-                comment.chat.id,
-                COMMENT_THREAD_ID,
+            try:
+                forwarded_original = await original_message.copy_to(
+                    comment.chat.id,
+                    COMMENT_THREAD_ID,
+                )
+            except TelegramBadRequest:
+                pass
+            else:
+                forwarded_original_id = forwarded_original.message_id
+        else:
+            forwarded_original_id = forwarded_original.message_id
+        if forwarded_original_id is not None:
+            # We're not in a channel, so we'll always have a User here.
+            original_user = cast("User", original_message.from_user)
+            original_user_link = user_link(original_user)
+            bot = cast("aiogram.Bot", comment.bot)
+            await bot.send_message(
+                chat_id=comment.chat.id,
+                text=comment_thread_author_reply.format(original_user_link),
+                reply_to_message_id=forwarded_original_id,
             )
-        forwarded_original_id = forwarded_original.message_id
-        # We're not in a channel, so we'll always have a User here.
-        original_user = cast("User", original_message.from_user)
-        original_user_link = user_link(original_user)
-        bot = cast("aiogram.Bot", comment.bot)
-        await bot.send_message(
-            chat_id=comment.chat.id,
-            text=comment_thread_author_reply.format(original_user_link),
-            reply_to_message_id=forwarded_original_id,
-        )
     # Forward comment and delete it.
     forwarded_comment = await comment.forward(comment.chat.id, COMMENT_THREAD_ID)
     await comment.delete()
