@@ -9,6 +9,7 @@ import dotenv
 from aiogram import Bot, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ChatType, ParseMode
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -56,12 +57,12 @@ add_bday_pending_msg = "Adding birthday..."
 add_bday_fail_msg = "Date format is invalid. Try something like 25-07"
 add_bday_error_msg = "Some error happened, try again later or contact maintainer."
 add_bday_success_msg = "Birthday added - {}"
-add_bday_button_txt = "Add your burthday too!"
+add_bday_button_txt = "Add your birthday too!"
 
-welcome_message = """Ну здравствуй, {}! 
+welcome_message = """Ну здравствуй, {}!
 
 Добро пожаловать в наше <tg-spoiler>греховное</tg-spoiler> уютное сообщество. Всем уже не терпится с тобой познакомиться! Заполняй анкету, просмотри правила и, конечно же, устраивайся поудобнее 🫦 
- 
+
 PS. Заполнение анкеты носит исключительно ознакомительный характер, ролевить насильно никого мы не заставляем."""
 rules_button_caption = "Правила"
 guide_button_caption = "Путеводитель"
@@ -109,7 +110,11 @@ def message_link(message_id: int, text: str, chat_id: int = CHAT_ID) -> str:
     return f'<a href="https://t.me/c/{message_link}">{text}</a>'
 
 
-@dp.message((F.chat.id == CHAT_ID) & (F.message_thread_id.in_(IMAGE_THREAD_IDS)) & ~allowed_content)
+@dp.message(
+    (F.chat.id == CHAT_ID)
+    & (F.message_thread_id.in_(IMAGE_THREAD_IDS))
+    & ~allowed_content,
+)
 async def forward(comment: Message) -> None:
     """Forward messages from image thread to comment thread."""
     entities = comment.entities
@@ -118,11 +123,25 @@ async def forward(comment: Message) -> None:
     original_message = comment.reply_to_message
     # If message is a reply to somethign - forward original message too and mention author.
     if original_message and original_message.message_id not in IMAGE_THREAD_IDS:
-        forwarded_original = await original_message.forward(comment.chat.id, COMMENT_THREAD_ID)
+        try:
+            forwarded_original = await original_message.forward(
+                comment.chat.id,
+                COMMENT_THREAD_ID,
+            )
+        except TelegramBadRequest:
+            forwarded_original = await original_message.copy_to(
+                comment.chat.id,
+                COMMENT_THREAD_ID,
+            )
+        forwarded_original_id = forwarded_original.message_id
         # We're not in a channel, so we'll always have a User here.
         original_user = cast("User", original_message.from_user)
         original_user_link = user_link(original_user)
-        await forwarded_original.answer(comment_thread_author_reply.format(original_user_link))
+        await aiogram.methods.send_message.SendMessage(
+            chat_id=comment.chat.id,
+            text=comment_thread_author_reply.format(original_user_link),
+            reply_to_message_id=forwarded_original_id,
+        )
     # Forward comment and delete it.
     forwarded_comment = await comment.forward(comment.chat.id, COMMENT_THREAD_ID)
     await comment.delete()
@@ -132,7 +151,9 @@ async def forward(comment: Message) -> None:
 
     comment_user_link = user_link(comment_user)
     msg_link = message_link(forwarded_comment.message_id, comment_thread_name)
-    answer = await comment.answer(image_thread_reply.format(user_tag=comment_user_link, message_link=msg_link))
+    answer = await comment.answer(
+        image_thread_reply.format(user_tag=comment_user_link, message_link=msg_link),
+    )
     f = asyncio.Task(del_msg(answer))
     tasks.append(f)
 
@@ -187,7 +208,7 @@ async def bday(inline_query: InlineQuery) -> None:
         await inline_query.answer([], cache_time=0)
 
 
-@dp.message(F.new_chat_members)
+@dp.message(F.new_chat_members & (F.chat.id == CHAT_ID))
 async def welcome_post(message: Message) -> None:
     """Make a welcome post on member joined."""
     pic = await load_pic()
@@ -219,7 +240,11 @@ async def welcome_post(message: Message) -> None:
     if not pic:
         await message.answer(text=welcome_msg, reply_markup=welcome_kb)
     else:
-        await message.answer_photo(photo=pic, caption=welcome_msg, reply_markup=welcome_kb)
+        await message.answer_photo(
+            photo=pic,
+            caption=welcome_msg,
+            reply_markup=welcome_kb,
+        )
 
 
 @dp.message(Command(welcome_pic_command), F.chat.type == ChatType.PRIVATE)
