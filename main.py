@@ -250,14 +250,14 @@ async def welcome_post(message: Message) -> None:
     # If no pic - send welcome message anyway.
     if not pic:
         await bot.send_message(
-            chat_id=chat_id,
+            chat_id=CHAT_ID,
             text=welcome_msg,
             reply_markup=welcome_kb,
             message_thread_id=WELCOME_THREAD,
         )
     else:
         await bot.send_photo(
-            chat_id=chat_id,
+            chat_id=CHAT_ID,
             photo=pic,
             caption=welcome_msg,
             reply_markup=welcome_kb,
