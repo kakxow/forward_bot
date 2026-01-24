@@ -38,6 +38,7 @@ DELETE_DELAY = float(os.environ["DELETE_DELAY"])
 RULES_THREAD = os.environ["RULES_THREAD"]
 GUIDE_THREAD = os.environ["GUIDE_THREAD"]
 SURVEY_THREAD = os.environ["SURVEY_THREAD"]
+WELCOME_THREAD = int(os.environ["WELCOME_THREAD"])
 
 allowed_entities = ("url", "text_link")
 allowed_content = F.user.is_bot | F.photo | F.video | F.audio | F.document | F.animation
@@ -245,14 +246,22 @@ async def welcome_post(message: Message) -> None:
             ],
         ],
     )
+    bot = cast("aiogram.Bot", message.bot)
     # If no pic - send welcome message anyway.
     if not pic:
-        await message.answer(text=welcome_msg, reply_markup=welcome_kb)
+        await bot.send_message(
+            chat_id=chat_id,
+            text=welcome_msg,
+            reply_markup=welcome_kb,
+            message_thread_id=WELCOME_THREAD,
+        )
     else:
-        await message.answer_photo(
+        await bot.send_photo(
+            chat_id=chat_id,
             photo=pic,
             caption=welcome_msg,
             reply_markup=welcome_kb,
+            message_thread_id=WELCOME_THREAD,
         )
 
 
